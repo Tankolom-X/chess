@@ -174,7 +174,7 @@ class Board:
                 if type(self.field[0][4]) == King and self.field[0][4].starting_position:
                     if self.field[0][1] == self.field[0][2] == self.field[0][3] is None \
                             and self.cell_is_under_attack(0, 1) == self.cell_is_under_attack(0, 2) \
-                            == self.cell_is_under_attack(0, 3) == False:
+                            == self.cell_is_under_attack(0, 3) == self.cell_is_under_attack(0, 4) == False:
                         k1 = self.field[0][4]
                         r1 = self.field[0][0]
                         self.field[0][4] = None
@@ -187,7 +187,7 @@ class Board:
                 if type(self.field[7][4]) == King and self.field[7][4].starting_position:
                     if self.field[7][1] == self.field[7][2] == self.field[7][3] is None \
                             and self.cell_is_under_attack(7, 1) == self.cell_is_under_attack(7, 2) \
-                            == self.cell_is_under_attack(7, 3) == False:
+                            == self.cell_is_under_attack(7, 3) == self.cell_is_under_attack(7, 4) == False:
                         k1 = self.field[7][4]
                         r1 = self.field[7][0]
                         self.field[7][4] = None
@@ -200,7 +200,8 @@ class Board:
             if type(self.field[0][7]) == Rook and self.field[0][7].starting_position:
                 if type(self.field[0][4]) == King and self.field[0][4].starting_position:
                     if self.field[0][6] == self.field[0][5] is None \
-                            and self.cell_is_under_attack(0, 6) == self.cell_is_under_attack(0, 5) == False:
+                            and self.cell_is_under_attack(0, 6) == self.cell_is_under_attack(0, 5) ==\
+                            self.cell_is_under_attack(0, 4) == False:
                         k1 = self.field[0][4]
                         r1 = self.field[0][7]
                         self.field[0][4] = None
@@ -212,9 +213,11 @@ class Board:
             if type(self.field[7][7]) == Rook and self.field[7][7].starting_position:
                 if type(self.field[7][4]) == King and self.field[7][4].starting_position:
                     if self.field[7][6] == self.field[7][5] is None \
-                            and self.cell_is_under_attack(7, 6) == self.cell_is_under_attack(7, 5) == False:
+                            and self.cell_is_under_attack(7, 6) == self.cell_is_under_attack(7, 5) ==\
+                            self.cell_is_under_attack(7, 4) == False:
                         k1 = self.field[7][4]
                         r1 = self.field[7][7]
+                        self.field[7][4] = None
                         self.field[7][4] = None
                         self.field[7][7] = None
                         self.field[7][6] = k1
