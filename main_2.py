@@ -36,25 +36,75 @@ def main():
         print('    exit                               -- выход')
         print('    move <row> <col> <row1> <row1>     -- ход из клетки (row, col)')
         print('                                          в клетку (row1, col1)')
+        print('    castling0                          -- рокировка в длинную сторону')
+        print('    castling7                          -- рокировка в короткую сторону')
+        print('    move_and_promote_pawn <row> <col>  -- ход пешки из клетки (row, col) ')
+        print('    <row1> <col1> <new_char>              в клетку (row1, col1)')
+        print('                                          с превращением в фигуру символом <new_char>')
         # Выводим приглашение игроку нужного цвета
         if board.current_player_color() == WHITE:
             print('Ход белых:')
         else:
             print('Ход чёрных:')
         command = input()
+
         if command == 'exit':
             break
-        move_type, row, col, row1, col1 = command.split()
-        row, col, row1, col1 = int(row), int(col), int(row1), int(col1)
-        if board.move_piece(row, col, row1, col1):
-            print('Ход успешен')
+        elif command.split()[0] == 'castling0':
+            if board.check(board.current_player_color()):
+                print('Вам шах. Сделайте другой ход')
+            else:
+                if board.castling0():
+                    print('Ход успешен')
+                else:
+                    print('Рокировка невозможна! Попробуйте другой ход!')
+
+        elif command.split()[0] == 'castling7':
+            if board.check(board.current_player_color()):
+                print('Вам шах. Сделайте другой ход')
+            else:
+                if board.castling7():
+                    print('Ход успешен')
+                else:
+                    print('Рокировка невозможна! Попробуйте другой ход!')
+        elif command.split()[0] == 'move_and_promote_pawn':
+            move_type, row, col, row1, col1, new_char = command.split()
+            row, col, row1, col1 = int(row), int(col), int(row1), int(col1)
+            piece1 = board.field[row][col]
+            piece2 = board.field[row1][col1]
+            if board.move_and_promote_pawn(row, col, row1, col1, new_char):
+                if not board.check(1 if board.current_player_color() == 2 else 2):
+                    print('Ход успешен')
+                else:
+                    print('Вам шах. Сделайте другой ход')
+                    board.field[row][col] = piece1
+                    board.field[row1][col1] = piece2
+                    board.color = 1 if board.current_player_color() == 2 else 2
+            else:
+                print('Координаты некорректны! Попробуйте другой ход!')
+        elif command.split()[0] == 'move':
+
+            move_type, row, col, row1, col1 = command.split()
+            row, col, row1, col1 = int(row), int(col), int(row1), int(col1)
+            piece1 = board.get_piece(row, col)
+            piece2 = board.get_piece(row1, col1)
+
+            if board.move_piece(row, col, row1, col1):
+                if not board.check(1 if board.current_player_color() == 2 else 2):
+                    print('Ход успешен')
+                else:
+                    print('Вам шах. Сделайте другой ход')
+                    board.field[row][col] = piece1
+                    board.field[row1][col1] = piece2
+                    board.color = 1 if board.current_player_color() == 2 else 2
+            else:
+                print('Координаты некорректны! Попробуйте другой ход!')
+
         else:
-            print('Координаты некорректы! Попробуйте другой ход!')
+            print('Команда некорректна')
 
 
 def correct_coords(row, col):
-    '''Функция проверяет, что координаты (row, col) лежат
-    внутри доски'''
     return 0 <= row < 8 and 0 <= col < 8
 
 
@@ -64,28 +114,22 @@ class Board:
         self.field = []
         for row in range(8):
             self.field.append([None] * 8)
-        # self.field[0] = [
-        #     Rook(WHITE), Knight(WHITE), Bishop(WHITE), Queen(WHITE),
-        #     King(WHITE), Bishop(WHITE), Knight(WHITE), Rook(WHITE)
-        # ]
-        # self.field[1] = [
-        #     Pawn(WHITE), Pawn(WHITE), Pawn(WHITE), Pawn(WHITE),
-        #     Pawn(WHITE), Pawn(WHITE), Pawn(WHITE), Pawn(WHITE)
-        # ]
-        # self.field[6] = [
-        #     Pawn(BLACK), Pawn(BLACK), Pawn(BLACK), Pawn(BLACK),
-        #     Pawn(BLACK), Pawn(BLACK), Pawn(BLACK), Pawn(BLACK)
-        # ]
-        # self.field[7] = [
-        #     Rook(BLACK), Knight(BLACK), Bishop(BLACK), Queen(BLACK),
-        #     King(BLACK), Bishop(BLACK), Knight(BLACK), Rook(BLACK)
-        # ]
-
-        self.field[3][3] = Bishop(WHITE)
-        self.field[0][0] = King(WHITE)
-        self.field[7][7] = Pawn(BLACK)
-        self.field[4][2] = Pawn(BLACK)
-        self.field[1][5] = Pawn(WHITE)
+        self.field[0] = [
+            Rook(WHITE), Knight(WHITE), Bishop(WHITE), Queen(WHITE),
+            King(WHITE), Bishop(WHITE), Knight(WHITE), Rook(WHITE)
+        ]
+        self.field[1] = [
+            Pawn(WHITE), Pawn(WHITE), Pawn(WHITE), Pawn(WHITE),
+            Pawn(WHITE), Pawn(WHITE), Pawn(WHITE), Pawn(WHITE)
+        ]
+        self.field[6] = [
+            Pawn(BLACK), Pawn(BLACK), Pawn(BLACK), Pawn(BLACK),
+            Pawn(BLACK), Pawn(BLACK), Pawn(BLACK), Pawn(BLACK)
+        ]
+        self.field[7] = [
+            Rook(BLACK), Knight(BLACK), Bishop(BLACK), Queen(BLACK),
+            King(BLACK), Bishop(BLACK), Knight(BLACK), Rook(BLACK)
+        ]
 
     def current_player_color(self):
         return self.color
@@ -108,10 +152,6 @@ class Board:
             return None
 
     def move_piece(self, row, col, row1, col1):
-        '''Переместить фигуру из точки (row, col) в точку (row1, col1).
-        Если перемещение возможно, метод выполнит его и вернёт True.
-        Если нет --- вернёт False'''
-
         if not correct_coords(row, col) or not correct_coords(row1, col1):
             return False
         if row == row1 and col == col1:
@@ -158,11 +198,13 @@ class Board:
             return True
         return False
 
-    def cell_is_under_attack(self, row1, col1):
+    def cell_is_under_attack(self, row1, col1, color):
         for row in range(8):
             for col in range(8):
                 piece = self.field[row][col]
-                if (piece is not None) and piece.color != self.color:
+                if (piece is not None) and piece.get_color() != color:
+                    if type(piece) is King:
+                        continue
                     if piece.can_attack(self, row, col, row1, col1):
                         return True
         else:
@@ -173,48 +215,61 @@ class Board:
             if type(self.field[0][0]) == Rook and self.field[0][0].starting_position:
                 if type(self.field[0][4]) == King and self.field[0][4].starting_position:
                     if self.field[0][1] == self.field[0][2] == self.field[0][3] is None \
-                            and self.cell_is_under_attack(0, 1) == self.cell_is_under_attack(0, 2) \
-                            == self.cell_is_under_attack(0, 3) == self.cell_is_under_attack(0, 4) == False:
+                            and self.cell_is_under_attack(0, 1, self.current_player_color()) == \
+                            self.cell_is_under_attack(0, 2, self.current_player_color()) \
+                            == self.cell_is_under_attack(0, 3, self.current_player_color()) \
+                            == self.cell_is_under_attack(0, 4, self.current_player_color()) is False:
                         k1 = self.field[0][4]
                         r1 = self.field[0][0]
                         self.field[0][4] = None
                         self.field[0][0] = None
                         self.field[0][2] = k1
                         self.field[0][3] = r1
+                        self.color = opponent(self.color)
+                        return True
 
         if self.current_player_color() == 2:
             if type(self.field[7][0]) == Rook and self.field[7][0].starting_position:
                 if type(self.field[7][4]) == King and self.field[7][4].starting_position:
                     if self.field[7][1] == self.field[7][2] == self.field[7][3] is None \
-                            and self.cell_is_under_attack(7, 1) == self.cell_is_under_attack(7, 2) \
-                            == self.cell_is_under_attack(7, 3) == self.cell_is_under_attack(7, 4) == False:
+                            and self.cell_is_under_attack(7, 1, self.current_player_color()) \
+                            == self.cell_is_under_attack(7, 2, self.current_player_color()) \
+                            == self.cell_is_under_attack(7, 3, self.current_player_color()) \
+                            == self.cell_is_under_attack(7, 4, self.current_player_color()) is False:
                         k1 = self.field[7][4]
                         r1 = self.field[7][0]
                         self.field[7][4] = None
                         self.field[7][0] = None
                         self.field[7][2] = k1
                         self.field[7][3] = r1
+                        self.color = opponent(self.color)
+                        return True
+        return False
 
     def castling7(self):
         if self.current_player_color() == 1:
             if type(self.field[0][7]) == Rook and self.field[0][7].starting_position:
                 if type(self.field[0][4]) == King and self.field[0][4].starting_position:
                     if self.field[0][6] == self.field[0][5] is None \
-                            and self.cell_is_under_attack(0, 6) == self.cell_is_under_attack(0, 5) ==\
-                            self.cell_is_under_attack(0, 4) == False:
+                            and self.cell_is_under_attack(0, 6, self.current_player_color()) \
+                            == self.cell_is_under_attack(0, 5, self.current_player_color()) == \
+                            self.cell_is_under_attack(0, 4, self.current_player_color()) is False:
                         k1 = self.field[0][4]
                         r1 = self.field[0][7]
                         self.field[0][4] = None
                         self.field[0][7] = None
                         self.field[0][6] = k1
                         self.field[0][5] = r1
+                        self.color = opponent(self.color)
+                        return True
 
-        if self.current_player_color() == 1:
+        if self.current_player_color() == 2:
             if type(self.field[7][7]) == Rook and self.field[7][7].starting_position:
                 if type(self.field[7][4]) == King and self.field[7][4].starting_position:
                     if self.field[7][6] == self.field[7][5] is None \
-                            and self.cell_is_under_attack(7, 6) == self.cell_is_under_attack(7, 5) ==\
-                            self.cell_is_under_attack(7, 4) == False:
+                            and self.cell_is_under_attack(7, 6, self.current_player_color()) \
+                            == self.cell_is_under_attack(7, 5, self.current_player_color()) == \
+                            self.cell_is_under_attack(7, 4, self.current_player_color()) is False:
                         k1 = self.field[7][4]
                         r1 = self.field[7][7]
                         self.field[7][4] = None
@@ -222,6 +277,22 @@ class Board:
                         self.field[7][7] = None
                         self.field[7][6] = k1
                         self.field[7][5] = r1
+                        self.color = opponent(self.color)
+                        return True
+        return False
+
+    def check(self, color):
+        for row in range(8):
+            for col in range(8):
+                piece = self.field[row][col]
+                if type(piece) is King and piece.get_color() == color:
+                    if self.cell_is_under_attack(row, col, color):
+                        return True
+                    else:
+                        return False
+        return False
+
+
 class Rook:
 
     def __init__(self, color):
@@ -277,7 +348,6 @@ class Pawn:
         # "взятие на проходе" не реализовано
         if col != col1:
             return False
-
         # Пешка может сделать из начального положения ход на 2 клетки
         # вперёд, поэтому поместим индекс начального ряда в start_row.
         if self.color == WHITE:
@@ -319,6 +389,7 @@ class Knight:
     def can_move(self, board, row, col, row1, col1):
         if not correct_coords(row1, col1):
             return False
+
         delta_row = abs(row - row1)
         delta_col = abs(col - col1)
         if max(delta_col, delta_row) == 2 and min(delta_col, delta_row) == 1:
@@ -330,8 +401,6 @@ class Knight:
 
 
 class King:
-    '''Класс короля. Пока что заглушка, которая может ходить в любую клетку.'''
-
     def __init__(self, color):
         self.color = color
         self.starting_position = True
@@ -346,7 +415,37 @@ class King:
         return 'K'
 
     def can_move(self, board, row, col, row1, col1):
-        return True  # Заглушка
+        if not correct_coords(row, col):
+            return False
+        color = self.get_color()
+        if color == 1:
+            if row == 0 and col == 4 and row1 == 0 and col1 == 6:
+                if board.castling7():
+                    return True
+            if row == 0 and row1 == 0 and col == 4 and col1 == 2:
+                if board.castling0():
+                    return True
+
+        cells = list()
+        cells.append((row1 + 1, col1) if correct_coords(row1 + 1, col1) else None)
+        cells.append((row1 + 1, col1 + 1) if correct_coords(row1 + 1, col1 + 1) else None)
+        cells.append((row1 + 1, col1 - 1) if correct_coords(row1 + 1, col1 - 1) else None)
+        cells.append((row1, col1 + 1) if correct_coords(row1, col1 + 1) else None)
+        cells.append((row1, col1 - 1) if correct_coords(row1, col1 - 1) else None)
+        cells.append((row1 - 1, col1 + 1) if correct_coords(row1, col1 + 1) else None)
+        cells.append((row1 - 1, col1 - 1) if correct_coords(row1, col1 - 1) else None)
+        cells.append((row1 - 1, col1) if correct_coords(row1, col1) else None)
+
+        for i in cells:
+            if type(board.field[i[0]][i[1]]) == King and board.field[i[0]][i[1]].get_color() != board.color:
+                return False
+
+        if board.cell_is_under_attack(row1, col1, board.current_player_color()):
+            return False
+        return ((row + 1 == row1 or row - 1 == row1) and col == col1) or (
+                (col + 1 == col1 or col - 1 == col1) and row == row1) or (
+                       row + 1 == row1 and (col + 1 == col1 or col - 1 == col1)) or (
+                       row - 1 == row1 and (col + 1 == col1 or col - 1 == col1))
 
     def can_attack(self, board, row, col, row1, col1):
         return self.can_move(board, row, col, row1, col1)
@@ -364,6 +463,7 @@ class Queen:
         return 'Q'
 
     def can_move(self, board, row, col, row1, col1):
+
         piece1 = board.get_piece(row1, col1)
         if not (piece1 is None) and piece1.get_color() == self.color:
             return False
@@ -441,43 +541,3 @@ class Bishop:
 
     def can_attack(self, board, row, col, row1, col1):
         return self.can_move(board, row, col, row1, col1)
-
-
-# __name__ -- специальная переменная, в которую python записывает имя
-# файла (без .py), если этот файл импортирован из друго, и "__main__", если
-# этот файл запущен как программа.
-# Другими словами, следующие две строчки:
-#   запустят функцию main, если файл запущен как программа;
-#   не сделают ничего, если этот файл импортирован из другого.
-# Второй случай реализуется, например, когда тестирующий скрипт импортирует
-# классы из вашего скрипта. В этом случае функця main не будет работать
-# и портить вывод теста.
-
-board = Board()
-board.field = [([None] * 8) for i in range(8)]
-board.field[0][0] = Rook(WHITE)
-board.field[0][4] = King(WHITE)
-board.field[0][7] = Rook(WHITE)
-
-board.field[7][0] = Rook(BLACK)
-board.field[7][4] = King(BLACK)
-board.field[7][7] = Rook(BLACK)
-
-
-print('before:')
-for row in range(7, -1, -1):
-    for col in range(8):
-        char = board.cell(row, col)[1]
-        print(char.replace(' ', '-'), end='')
-    print()
-print()
-
-print("Рокировка")
-print(board.castling0())
-print(board.castling7())
-
-for row in range(7, -1, -1):
-    for col in range(8):
-        char = board.cell(row, col)[1]
-        print(char.replace(' ', '-'), end='')
-    print()
