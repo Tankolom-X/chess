@@ -38,7 +38,7 @@ def main():
         print('                                          в клетку (row1, col1)')
         print('    castling0                          -- рокировка в длинную сторону')
         print('    castling7                          -- рокировка в короткую сторону')
-        print('    move_and_promote_pawn <row> <col>  -- ход пешки из клетки (row, col) ')
+        print('    promote pawn <row> <col>           -- ход пешки из клетки (row, col) ')
         print('    <row1> <col1> <new_char>              в клетку (row1, col1)')
         print('                                          с превращением в фигуру символом <new_char>')
         # Выводим приглашение игроку нужного цвета
@@ -67,8 +67,9 @@ def main():
                     print('Ход успешен')
                 else:
                     print('Рокировка невозможна! Попробуйте другой ход!')
-        elif command.split()[0] == 'move_and_promote_pawn':
-            move_type, row, col, row1, col1, new_char = command.split()
+
+        elif command.split()[0] + ' ' + command.split()[1] == 'promote pawn':
+            move_type1, move_type2, row, col, row1, col1, new_char = command.split()
             row, col, row1, col1 = int(row), int(col), int(row1), int(col1)
             piece1 = board.field[row][col]
             piece2 = board.field[row1][col1]
@@ -541,3 +542,7 @@ class Bishop:
 
     def can_attack(self, board, row, col, row1, col1):
         return self.can_move(board, row, col, row1, col1)
+
+
+if __name__ == '__main__':
+    main()
