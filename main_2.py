@@ -2,7 +2,6 @@ WHITE = 1
 BLACK = 2
 
 
-# Удобная функция для вычисления цвета противника
 def opponent(color):
     if color == WHITE:
         return BLACK
@@ -10,7 +9,7 @@ def opponent(color):
         return WHITE
 
 
-def print_board(board):  # Распечатать доску в текстовом виде (см. скриншот)
+def print_board(board):
     print('     +----+----+----+----+----+----+----+----+')
     for row in range(7, -1, -1):
         print(' ', row, end='  ')
@@ -25,13 +24,9 @@ def print_board(board):  # Распечатать доску в текстово
 
 
 def main():
-    # Создаём шахматную доску
     board = Board()
-    # Цикл ввода команд игроков
     while True:
-        # Выводим положение фигур на доске
         print_board(board)
-        # Подсказка по командам
         print('Команды:')
         print('    exit                               -- выход')
         print('    move <row> <col> <row1> <row1>     -- ход из клетки (row, col)')
@@ -41,7 +36,7 @@ def main():
         print('    promote pawn <row> <col>           -- ход пешки из клетки (row, col) ')
         print('    <row1> <col1> <new_char>              в клетку (row1, col1)')
         print('                                          с превращением в фигуру символом <new_char>')
-        # Выводим приглашение игроку нужного цвета
+
         if board.current_player_color() == WHITE:
             print('Ход белых:')
         else:
@@ -136,9 +131,6 @@ class Board:
         return self.color
 
     def cell(self, row, col):
-        '''Возвращает строку из двух символов. Если в клетке (row, col)
-        находится фигура, символы цвета и фигуры. Если клетка пуста,
-        то два пробела.'''
         piece = self.field[row][col]
         if piece is None:
             return '  '
@@ -156,7 +148,7 @@ class Board:
         if not correct_coords(row, col) or not correct_coords(row1, col1):
             return False
         if row == row1 and col == col1:
-            return False  # нельзя пойти в ту же клетку
+            return False
         piece = self.field[row][col]
         if piece is None:
             return False
@@ -170,8 +162,8 @@ class Board:
                 return False
         else:
             return False
-        self.field[row][col] = None  # Снять фигуру.
-        self.field[row1][col1] = piece  # Поставить на новое место.
+        self.field[row][col] = None
+        self.field[row1][col1] = piece
         if type(self.field[row1][col1]) == King or type(self.field[row1][col1]) == Rook:
             self.field[row1][col1].was_moved()
         self.color = opponent(self.color)
@@ -310,20 +302,16 @@ class Rook:
         return 'R'
 
     def can_move(self, board, row, col, row1, col1):
-        # Невозможно сделать ход в клетку, которая не лежит в том же ряду
-        # или столбце клеток.
         if row != row1 and col != col1:
             return False
 
         step = 1 if (row1 >= row) else -1
         for r in range(row + step, row1, step):
-            # Если на пути по горизонтали есть фигура
             if not (board.get_piece(r, col) is None):
                 return False
 
         step = 1 if (col1 >= col) else -1
         for c in range(col + step, col1, step):
-            # Если на пути по вертикали есть фигура
             if not (board.get_piece(row, c) is None):
                 return False
 
@@ -345,12 +333,8 @@ class Pawn:
         return 'P'
 
     def can_move(self, board, row, col, row1, col1):
-        # Пешка может ходить только по вертикали
-        # "взятие на проходе" не реализовано
         if col != col1:
             return False
-        # Пешка может сделать из начального положения ход на 2 клетки
-        # вперёд, поэтому поместим индекс начального ряда в start_row.
         if self.color == WHITE:
             direction = 1
             start_row = 1
@@ -358,11 +342,9 @@ class Pawn:
             direction = -1
             start_row = 6
 
-        # ход на 1 клетку
         if row + direction == row1:
             return True
 
-        # ход на 2 клетки из начального положения
         if (row == start_row
                 and row + 2 * direction == row1
                 and board.field[row + direction][col] is None):
@@ -385,7 +367,7 @@ class Knight:
         return self.color
 
     def char(self):
-        return 'N'  # kNight, буква 'K' уже занята королём
+        return 'N'
 
     def can_move(self, board, row, col, row1, col1):
         if not correct_coords(row1, col1):
